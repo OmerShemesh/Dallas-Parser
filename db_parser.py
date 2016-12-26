@@ -1,19 +1,12 @@
 import psycopg2
 import psycopg2.extras
 
+from parsers import *
+
 conn = psycopg2.connect("dbname=lago user=omer")
 
 cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-cursor.execute('SELECT * FROM vds')
+general_info_parser = GeneralInfoParser(cursor)
 
-
-vds_dict_list = cursor.fetchall()
-
-for vds_dict in vds_dict_list:
-    print(vds_dict['cpu_model'])
-
-
-
-cursor.close()
-conn.close()
+print(general_info_parser.parse())
