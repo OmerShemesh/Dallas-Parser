@@ -14,12 +14,8 @@ class GeneralInfoParser:
         return cluster_dict
 
     def parse_hosts(self):
-        self.cursor.execute('SELECT * FROM vds')
-
-        vds_list = self.cursor.fetchall()
-
         hosts_list = []
-        for vds_host in vds_list:
+        for vds_host in self.vds_list:
             hosts_list.append(
                 {
                     '_id': vds_host['vds_id'],
