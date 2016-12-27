@@ -9,4 +9,8 @@ cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 general_info_parser = GeneralInfoParser(cursor)
 
-print(general_info_parser.parse())
+print(general_info_parser.parse_hosts())
+print(general_info_parser.parse_cluster())
+
+conn.close()
+cursor.close()
