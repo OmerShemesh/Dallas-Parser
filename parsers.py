@@ -1,6 +1,3 @@
-import psycopg2
-import psycopg2.extras
-
 
 class GeneralInfoParser:
     def __init__(self, cursor):
@@ -10,7 +7,11 @@ class GeneralInfoParser:
 
     def parse_cluster(self):
 
-        cluster_dict = {'_id': self.vds_list[0]['cluster_id'], 'cluster_name': self.vds_list[0]['cluster_name']}
+        cluster_dict = {'_id': self.vds_list[0]['cluster_id'], 'cluster_name': self.vds_list[0]['cluster_name'],
+                        'hosts': []}
+
+        for vds_host in self.vds_list:
+            cluster_dict['hosts'].append(vds_host['vds_id'])
         return cluster_dict
 
     def parse_hosts(self):
