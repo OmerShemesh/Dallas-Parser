@@ -23,7 +23,7 @@ class GeneralInfoParser:
 
             datacenter_list.append(datacenter_dict)
 
-        return datacenter_dict
+        return datacenter_list
 
     def __parse_template(self,datacenter_id):
         templates_list = []

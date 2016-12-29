@@ -14,7 +14,8 @@ general_info_parser = GeneralInfoParser(cursor)
 
 data_collection = db.data
 
-data_collection.insert_one(general_info_parser.parse())
+for datacenter in general_info_parser.parse():
+    data_collection.insert_one(datacenter)
 
 # cluster_collection = db.cluster
 # template_collection = db.template
