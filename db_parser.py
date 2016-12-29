@@ -12,23 +12,27 @@ db = mongo_client.dallas
 
 general_info_parser = GeneralInfoParser(cursor)
 
-cluster_collection = db.cluster
-template_collection = db.template
-host_collection = db.host
-vm_collection = db.vm
+data_collection = db.data
 
+data_collection.insert_one(general_info_parser.parse())
 
-for cluster in general_info_parser.parse_cluster():
-    cluster_collection.insert_one(cluster)
+# cluster_collection = db.cluster
+# template_collection = db.template
+# host_collection = db.host
+# vm_collection = db.vm
 
-for template in general_info_parser.parse_template():
-    template_collection.insert_one(template)
-
-for host in general_info_parser.parse_hosts():
-    host_collection.insert_one(host)
-
-for vm in general_info_parser.parse_vms():
-    vm_collection.insert_one(vm)
+#
+# for cluster in general_info_parser.parse_cluster():
+#     cluster_collection.insert_one(cluster)
+#
+# for template in general_info_parser.parse_template():
+#     template_collection.insert_one(template)
+#
+# for host in general_info_parser.parse_hosts():
+#     host_collection.insert_one(host)
+#
+# for vm in general_info_parser.parse_vms():
+#     vm_collection.insert_one(vm)
 
 conn.close()
 cursor.close()
