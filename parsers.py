@@ -56,7 +56,6 @@ class GeneralInfoParser:
                 'cpu_usage': vds_host['usage_cpu_percent'],
                 'mem_usage': vds_host['usage_mem_percent'],
                 'running_vms': []
-
             }
 
             for vm in self.vms_db_list:
