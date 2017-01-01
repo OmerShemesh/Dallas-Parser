@@ -10,6 +10,25 @@ class GeneralInfoParser:
         self.cursor.execute("SELECT * FROM vm_templates_view")
         self.templates_db_list = self.cursor.fetchall()
 
+    def parse_datacenter(self):
+
+        datacenter_dict = {
+            '_id': self.clusters_db_list[0]['storage_pool_id'],
+            'datacenter_name': self.clusters_db_list[0]['storage_pool_name'],
+            'clusters': [],
+            'templates':[]
+
+        }
+
+        for template in self.templates_db_list:
+            if template['name'] != "Blank" and template['storage_pool_id'] == datacenter_dict['_id']:
+                datacenter_dict['templates'].append(template['vmt_guid'])
+
+        for cluster in self.clusters_db_list:
+            datacenter_dict['clusters'].append(cluster['cluster_id'])
+
+        return datacenter_dict
+
     def parse_template(self):
         templates_list = []
         for template in self.templates_db_list:
@@ -23,7 +42,6 @@ class GeneralInfoParser:
         return templates_list
 
     def parse_cluster(self):
-
         clusters_list = []
         for cluster in self.clusters_db_list:
             cluster_dict = {

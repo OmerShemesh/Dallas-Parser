@@ -14,26 +14,30 @@ general_info_parser = GeneralInfoParser(cursor)
 
 data_collection = db.data
 
-for datacenter in general_info_parser.parse():
-    data_collection.insert_one(datacenter)
+# for datacenter in general_info_parser.parse():
+#     data_collection.insert_one(datacenter)
 
-# cluster_collection = db.cluster
-# template_collection = db.template
-# host_collection = db.host
-# vm_collection = db.vm
 
-#
-# for cluster in general_info_parser.parse_cluster():
-#     cluster_collection.insert_one(cluster)
-#
-# for template in general_info_parser.parse_template():
-#     template_collection.insert_one(template)
-#
-# for host in general_info_parser.parse_hosts():
-#     host_collection.insert_one(host)
-#
-# for vm in general_info_parser.parse_vms():
-#     vm_collection.insert_one(vm)
+datacenter_collection = db.datacenter
+cluster_collection = db.cluster
+template_collection = db.template
+host_collection = db.host
+vm_collection = db.vm
+
+
+datacenter_collection.insert_one(general_info_parser.parse_datacenter())
+
+for cluster in general_info_parser.parse_cluster():
+    cluster_collection.insert_one(cluster)
+
+for template in general_info_parser.parse_template():
+    template_collection.insert_one(template)
+
+for host in general_info_parser.parse_hosts():
+    host_collection.insert_one(host)
+
+for vm in general_info_parser.parse_vms():
+    vm_collection.insert_one(vm)
 
 conn.close()
 cursor.close()
