@@ -10,12 +10,11 @@ mongo_client = MongoClient('mongodb://localhost:27017/')
 
 db = mongo_client.dallas
 
-general_info_parser = GeneralInfoParser(cursor)
-
-data_collection = db.data
-
-# for datacenter in general_info_parser.parse():
-#     data_collection.insert_one(datacenter)
+datacenter_parser = DataCenterParser(cursor)
+cluster_parser = ClusterParser(cursor)
+template_parser = TemplateParser(cursor)
+host_parser = HostParser(cursor)
+vm_parser = VirtualMachineParser(cursor)
 
 
 datacenter_collection = db.datacenter
@@ -25,19 +24,21 @@ host_collection = db.host
 vm_collection = db.vm
 
 
-datacenter_collection.insert_one(general_info_parser.parse_datacenter())
+datacenter_collection.insert_one(datacenter_parser.datacenter_dict)
 
-for cluster in general_info_parser.parse_cluster():
+for cluster in cluster_parser.clusters_list:
     cluster_collection.insert_one(cluster)
 
-for template in general_info_parser.parse_template():
+for template in template_parser.templates_list:
     template_collection.insert_one(template)
 
-for host in general_info_parser.parse_hosts():
+for host in host_parser.hosts_list:
     host_collection.insert_one(host)
 
-for vm in general_info_parser.parse_vms():
+for vm in vm_parser.vms_list:
     vm_collection.insert_one(vm)
 
 conn.close()
 cursor.close()
+
+
