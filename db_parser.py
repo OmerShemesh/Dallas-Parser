@@ -82,4 +82,7 @@ else:
     for vm in parsers['vm_parser'].vms_list:
         vm_collection.insert_one(vm)
 
+    for cursor in cursor_dict.values():
+        cursor.close()
     conn.close()
+    mongo_client.close()
