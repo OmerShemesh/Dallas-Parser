@@ -79,11 +79,11 @@ class TemplateParser:
 
 
 class VirtualMachineParser:
-    def __init__(self, curosr):
+    def __init__(self, cursor):
         self.vms_list = []
         self.clusters = {}
         self.running_hosts = {}
-        self.cursor = curosr
+        self.cursor = cursor
         self.cursor.execute("SELECT * FROM vms")
         self.vms_db_list = self.cursor.fetchall()
 
