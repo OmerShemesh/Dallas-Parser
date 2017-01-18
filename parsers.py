@@ -1,6 +1,14 @@
-class DataCenterParser:
+import threading
+
+
+class DataCenterParser(threading.Thread):
     def __init__(self, cursor):
+        super().__init__()
         self.cursor = cursor
+        self.datacenters_db_list = []
+        self.datacenter_dict = {}
+
+    def run(self):
         self.cursor.execute("SELECT * FROM cluster_view")
         self.datacenters_db_list = self.cursor.fetchall()
         self.datacenter_dict = {
@@ -9,10 +17,14 @@ class DataCenterParser:
         }
 
 
-class ClusterParser:
+class ClusterParser(threading.Thread):
     def __init__(self, cursor):
+        super().__init__()
         self.clusters_list = []
         self.cursor = cursor
+        self.clusters_db_list = []
+
+    def run(self):
         self.cursor.execute("SELECT * FROM cluster_view")
         self.clusters_db_list = self.cursor.fetchall()
         for cluster in self.clusters_db_list:
@@ -27,11 +39,15 @@ class ClusterParser:
             self.clusters_list.append(cluster_dict)
 
 
-class HostParser:
+class HostParser(threading.Thread):
     def __init__(self, cursor):
+        super().__init__()
         self.hosts_list = []
         self.cursor = cursor
         self.clusters = {}
+        self.vds_db_list = []
+
+    def run(self):
         self.cursor.execute("SELECT * FROM vds")
         self.vds_db_list = self.cursor.fetchall()
         for vds_host in self.vds_db_list:
@@ -61,10 +77,14 @@ class HostParser:
         return self.clusters[cluster_id]
 
 
-class TemplateParser:
+class TemplateParser(threading.Thread):
     def __init__(self, cursor):
+        super().__init__()
         self.templates_list = []
         self.cursor = cursor
+        self.templates_db_list = []
+
+    def run(self):
         self.cursor.execute("SELECT * FROM vm_templates_view")
         self.templates_db_list = self.cursor.fetchall()
         for template in self.templates_db_list:
@@ -78,12 +98,16 @@ class TemplateParser:
                 self.templates_list.append(template_dict)
 
 
-class VirtualMachineParser:
+class VirtualMachineParser(threading.Thread):
     def __init__(self, cursor):
+        super().__init__()
         self.vms_list = []
         self.clusters = {}
         self.running_hosts = {}
         self.cursor = cursor
+        self.vms_db_list = []
+
+    def run(self):
         self.cursor.execute("SELECT * FROM vms")
         self.vms_db_list = self.cursor.fetchall()
 
@@ -104,4 +128,4 @@ class VirtualMachineParser:
         return self.clusters[cluster_id]
 
     def get_host_running_vm_count(self, host_id):
-        return self.running_hosts.get(host_id,0)
+        return self.running_hosts.get(host_id, 0)

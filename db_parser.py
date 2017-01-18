@@ -1,9 +1,7 @@
 import sys
-import threading
 from psycopg2 import connect, extras, OperationalError
 from parsers import *
 from pymongo import MongoClient, errors
-
 
 postgres_dbname = sys.argv[1]
 postgres_user = sys.argv[2]
@@ -24,38 +22,24 @@ except (errors.ConnectionFailure, OperationalError) as e:
     print(e)
 
 else:
-    parsers = {}
-
-    def get_parser(parser_name):
-        if parser_name == 'dc_parser':
-            parsers[parser_name] = DataCenterParser(cursor_dict['dc_cursor'])
-        if parser_name == 'cluster_parser':
-            parsers[parser_name] = ClusterParser(cursor_dict['cluster_cursor'])
-        if parser_name == 'template_parser':
-            parsers[parser_name] = TemplateParser(cursor_dict['template_cursor'])
-        if parser_name == 'host_parser':
-            parsers[parser_name] = HostParser(cursor_dict['host_cursor'])
-        if parser_name == 'vm_parser':
-            parsers[parser_name] = VirtualMachineParser(cursor_dict['vm_cursor'])
-
     threads = []
-    dc_thread = threading.Thread(target=get_parser, args=('dc_parser',))
-    threads.append(dc_thread)
-    cluster_thread = threading.Thread(target=get_parser, args=('cluster_parser',))
-    threads.append(cluster_thread)
-    template_thread = threading.Thread(target=get_parser, args=('template_parser',))
-    threads.append(template_thread)
-    host_thread = threading.Thread(target=get_parser, args=('host_parser',))
-    threads.append(host_thread)
-    vm_thread = threading.Thread(target=get_parser, args=('vm_parser',))
-    threads.append(vm_thread)
+
+    dc_parser = DataCenterParser(cursor_dict['dc_cursor'])
+    threads.append(dc_parser)
+    cluster_parser = ClusterParser(cursor_dict['cluster_cursor'])
+    threads.append(cluster_parser)
+    template_parser = TemplateParser(cursor_dict['template_cursor'])
+    threads.append(template_parser)
+    host_parser = HostParser(cursor_dict['host_cursor'])
+    threads.append(host_parser)
+    vm_parser = VirtualMachineParser(cursor_dict['vm_cursor'])
+    threads.append(vm_parser)
 
     for thread in threads:
         thread.start()
 
     for thread in threads:
         thread.join()
-
 
     db = mongo_client.dallas
 
@@ -65,21 +49,21 @@ else:
     host_collection = db.host
     vm_collection = db.vm
 
-    datacenter_collection.insert_one(parsers['dc_parser'].datacenter_dict)
+    datacenter_collection.insert_one(dc_parser.datacenter_dict)
 
-    for cluster in parsers['cluster_parser'].clusters_list:
-        cluster['hosts_count'] = parsers['host_parser'].get_cluster_hosts_count(cluster['_id'])
-        cluster['vms_count'] = parsers['vm_parser'].get_cluster_vm_count(cluster['_id'])
+    for cluster in cluster_parser.clusters_list:
+        cluster['hosts_count'] = host_parser.get_cluster_hosts_count(cluster['_id'])
+        cluster['vms_count'] = vm_parser.get_cluster_vm_count(cluster['_id'])
         cluster_collection.insert_one(cluster)
 
-    for template in parsers['template_parser'].templates_list:
+    for template in template_parser.templates_list:
         template_collection.insert_one(template)
 
-    for host in parsers['host_parser'].hosts_list:
-        host['running_vms_count'] = parsers['vm_parser'].get_host_running_vm_count(host['_id'])
+    for host in host_parser.hosts_list:
+        host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
         host_collection.insert_one(host)
 
-    for vm in parsers['vm_parser'].vms_list:
+    for vm in vm_parser.vms_list:
         vm_collection.insert_one(vm)
 
     for cursor in cursor_dict.values():
