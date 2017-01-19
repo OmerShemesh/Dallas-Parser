@@ -49,21 +49,21 @@ else:
     host_collection = db.host
     vm_collection = db.vm
 
-    datacenter_collection.insert_one(dc_parser.datacenter_dict)
+    datacenter_collection.insert_one(dc_parser.datacenter)
 
-    for cluster in cluster_parser.clusters_list:
+    for cluster in cluster_parser.clusters:
         cluster['hosts_count'] = host_parser.get_cluster_hosts_count(cluster['_id'])
         cluster['vms_count'] = vm_parser.get_cluster_vm_count(cluster['_id'])
         cluster_collection.insert_one(cluster)
 
-    for template in template_parser.templates_list:
+    for template in template_parser.templates:
         template_collection.insert_one(template)
 
-    for host in host_parser.hosts_list:
+    for host in host_parser.hosts:
         host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
         host_collection.insert_one(host)
 
-    for vm in vm_parser.vms_list:
+    for vm in vm_parser.vms:
         vm_collection.insert_one(vm)
 
     for cursor in cursor_dict.values():
