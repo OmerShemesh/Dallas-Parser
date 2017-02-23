@@ -7,21 +7,17 @@ class DataCenterParser(threading.Thread):
         self.__cursor = cursor
         self.__datacenters_db_list = []
         self.__datacenter_list = []
-        self.__datacente_ids = []
 
     def run(self):
-
-        self.__cursor.execute("SELECT * FROM cluster_view")
+        self.__cursor.execute("SELECT * FROM storage_pool")
         self.__datacenters_db_list = self.__cursor.fetchall()
-        for idx, datacenter in enumerate(self.__datacenters_db_list):
-            datacenter_id = self.__datacenters_db_list[idx]['storage_pool_id']
-            if datacenter_id not in self.__datacente_ids:
-                self.__datacente_ids.append(datacenter_id)
-                datacenter_dict = {
-                    '_id': datacenter_id,
-                    'datacenter_name': self.__datacenters_db_list[idx]['storage_pool_name']
-                }
-                self.__datacenter_list.append(datacenter_dict)
+        for datacenter in self.__datacenters_db_list:
+
+            datacenter_dict = {
+                '_id': datacenter['id'],
+                'datacenter_name': datacenter['name']
+            }
+            self.__datacenter_list.append(datacenter_dict)
 
     @property
     def datacenters(self):
@@ -45,6 +41,7 @@ class ClusterParser(threading.Thread):
             cluster_dict = {
                 '_id': cluster['cluster_id'],
                 'cluster_name': cluster['name'],
+                'cpu_family': cluster['cpu_name'],
                 'ovirt_compatibility_version': cluster['compatibility_version'],
                 'datacenter_id': cluster['storage_pool_id'],
                 'vms_count': 0,
