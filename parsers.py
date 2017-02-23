@@ -6,19 +6,26 @@ class DataCenterParser(threading.Thread):
         super().__init__()
         self.__cursor = cursor
         self.__datacenters_db_list = []
-        self.__datacenter_dict = {}
+        self.__datacenter_list = []
+        self.__datacente_ids = []
 
     def run(self):
+
         self.__cursor.execute("SELECT * FROM cluster_view")
         self.__datacenters_db_list = self.__cursor.fetchall()
-        self.__datacenter_dict = {
-            '_id': self.__datacenters_db_list[0]['storage_pool_id'],
-            'datacenter_name': self.__datacenters_db_list[0]['storage_pool_name']
-        }
+        for idx, datacenter in enumerate(self.__datacenters_db_list):
+            datacenter_id = self.__datacenters_db_list[idx]['storage_pool_id']
+            if datacenter_id not in self.__datacente_ids:
+                self.__datacente_ids.append(datacenter_id)
+                datacenter_dict = {
+                    '_id': datacenter_id,
+                    'datacenter_name': self.__datacenters_db_list[idx]['storage_pool_name']
+                }
+                self.__datacenter_list.append(datacenter_dict)
 
     @property
-    def datacenter(self):
-        return self.__datacenter_dict
+    def datacenters(self):
+        return self.__datacenter_list
 
 
 class ClusterParser(threading.Thread):
@@ -27,11 +34,14 @@ class ClusterParser(threading.Thread):
         self.__clusters_list = []
         self.__cursor = cursor
         self.__clusters_db_list = []
+        self.__datacenters = {}
 
     def run(self):
         self.__cursor.execute("SELECT * FROM cluster_view")
         self.__clusters_db_list = self.__cursor.fetchall()
         for cluster in self.__clusters_db_list:
+            self.__datacenters[cluster['storage_pool_id']] = self.__datacenters.get(cluster['storage_pool_id'], 0) + 1
+
             cluster_dict = {
                 '_id': cluster['cluster_id'],
                 'cluster_name': cluster['name'],
@@ -45,6 +55,9 @@ class ClusterParser(threading.Thread):
     @property
     def clusters(self):
         return self.__clusters_list
+
+    def get_datacenter_clusters_count(self,datacenter_id):
+        return self.__datacenters.get(datacenter_id, 0)
 
 
 class HostParser(threading.Thread):
@@ -86,7 +99,7 @@ class HostParser(threading.Thread):
         return self.__hosts_list
 
     def get_cluster_hosts_count(self, cluster_id):
-        return self.__clusters[cluster_id]
+        return self.__clusters.get(cluster_id, 0)
 
 
 class TemplateParser(threading.Thread):
@@ -141,7 +154,7 @@ class VirtualMachineParser(threading.Thread):
             self.__vms_list.append(vm_dict)
 
     def get_cluster_vm_count(self, cluster_id):
-        return self.__clusters[cluster_id]
+        return self.__clusters.get(cluster_id, 0)
 
     def get_host_running_vm_count(self, host_id):
         return self.__running_hosts.get(host_id, 0)

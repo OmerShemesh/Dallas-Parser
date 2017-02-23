@@ -49,7 +49,9 @@ else:
     host_collection = db.host
     vm_collection = db.vm
 
-    datacenter_collection.insert_one(dc_parser.datacenter)
+    for datacenter in dc_parser.datacenters:
+        datacenter['clusters_count'] = cluster_parser.get_datacenter_clusters_count(datacenter['_id'])
+        datacenter_collection.insert_one(datacenter)
 
     for cluster in cluster_parser.clusters:
         cluster['hosts_count'] = host_parser.get_cluster_hosts_count(cluster['_id'])
