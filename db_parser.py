@@ -5,6 +5,15 @@ from pymongo import MongoClient, errors
 
 postgres_dbname = sys.argv[1]
 postgres_user = sys.argv[2]
+fqdn = sys.argv[3]
+
+
+def parse_fqdn(fqdn):
+    split = fqdn.split('-')[1].split('.')
+    join = '.'.join(split[1:])
+
+    return join
+
 
 try:
     conn = connect("dbname=%s user=%s" % (postgres_dbname, postgres_user))
@@ -22,6 +31,9 @@ except (errors.ConnectionFailure, OperationalError) as e:
     print(e)
 
 else:
+
+    setup_id = parse_fqdn(fqdn)
+
     threads = []
 
     dc_parser = DataCenterParser(cursor_dict['dc_cursor'])
@@ -43,30 +55,34 @@ else:
 
     db = mongo_client.dallas
 
+    setup_collection = db.setup
     datacenter_collection = db.datacenter
     cluster_collection = db.cluster
     template_collection = db.template
     host_collection = db.host
     vm_collection = db.vm
 
+    setup_collection.update({'_id': setup_id}, {'_id': setup_id, 'dcs_count': len(dc_parser.datacenters)}, upsert=True)
+
     for datacenter in dc_parser.datacenters:
         datacenter['clusters_count'] = cluster_parser.get_datacenter_clusters_count(datacenter['_id'])
-        datacenter_collection.insert_one(datacenter)
+        datacenter['setup_id'] = setup_id
+        datacenter_collection.update({'_id': datacenter['_id']}, datacenter, upsert=True)
 
     for cluster in cluster_parser.clusters:
         cluster['hosts_count'] = host_parser.get_cluster_hosts_count(cluster['_id'])
         cluster['vms_count'] = vm_parser.get_cluster_vm_count(cluster['_id'])
-        cluster_collection.insert_one(cluster)
+        cluster_collection.update({'_id': cluster['_id']}, cluster, upsert=True)
 
     for template in template_parser.templates:
-        template_collection.insert_one(template)
+        template_collection.update({'_id': template['_id']}, template, upsert=True)
 
     for host in host_parser.hosts:
         host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
-        host_collection.insert_one(host)
+        host_collection.update({'_id': host['_id']}, host, upsert=True)
 
     for vm in vm_parser.vms:
-        vm_collection.insert_one(vm)
+        vm_collection.update({'_id': vm['_id']}, vm, upsert=True)
 
     for cursor in cursor_dict.values():
         cursor.close()
