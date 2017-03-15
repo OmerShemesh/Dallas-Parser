@@ -65,15 +65,24 @@ class HostParser(threading.Thread):
         self.__clusters = {}
         self.__vds_db_list = []
 
+    def _parse_cpu_manufacturer(self, manufacturer):
+        manufacturer = manufacturer.lower()
+
+        if manufacturer.startswith('intel'):
+            return 'Intel'
+        elif manufacturer.startswith('amd'):
+            return 'AMD'
+        elif manufacturer.startswith('power'):
+            return 'IBM'
+
+
+
     def run(self):
+
         self.__cursor.execute("SELECT * FROM vds")
         self.__vds_db_list = self.__cursor.fetchall()
         for vds_host in self.__vds_db_list:
-            cpu_manufacturer = ""
-            if vds_host['cpu_model'].startswith("Intel"):
-                cpu_manufacturer = "Intel"
-            elif vds_host['cpu_model'].startswith("AMD"):
-                cpu_manufacturer = "AMD"
+            cpu_manufacturer = self._parse_cpu_manufacturer(vds_host['cpu_model'])
 
             self.__clusters[vds_host['cluster_id']] = self.__clusters.get(vds_host['cluster_id'], 0) + 1
 
