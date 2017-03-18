@@ -1,5 +1,6 @@
 import threading
-
+import json
+import os
 
 class DataCenterParser(threading.Thread):
     def __init__(self, cursor):
@@ -15,7 +16,9 @@ class DataCenterParser(threading.Thread):
 
             datacenter_dict = {
                 '_id': datacenter['id'],
-                'datacenter_name': datacenter['name']
+                'datacenter_name': datacenter['name'],
+                'ovirt_compatibility_version': datacenter['compatibility_version'],
+
             }
             self.__datacenter_list.append(datacenter_dict)
 
@@ -168,3 +171,41 @@ class VirtualMachineParser(threading.Thread):
     @property
     def vms(self):
         return self.__vms_list
+
+
+class StorageParser(threading.Thread):
+
+    def __init__(self, cursor):
+        super().__init__()
+        self.__storage_list = []
+        self.__storage_db_list = []
+        self.__cursor = cursor
+
+    def run(self):
+        self.__cursor.execute("SELECT * FROM storage_domains")
+        self.__storage_db_list = self.__cursor.fetchall()
+        storage_types = self._parse_storage_types()
+        for storage in self.__storage_db_list:
+            if str(storage['storage_type']) in storage_types:
+                storage_dict = {
+                    '_id': storage['id'],
+                    'storage_type': storage_types[str(storage['storage_type'])],
+                    'datacenter_id': storage['storage_pool_id']
+                }
+                self.__storage_list.append(storage_dict)
+
+    def _parse_storage_types(self):
+        with open(os.path.join(os.getcwd(), 'data/storage_types.json')) as file:
+            data = json.load(file)
+            return data
+
+    @property
+    def get_storage(self):
+        return self.__storage_list
+
+
+
+
+
+
+

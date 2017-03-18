@@ -5,7 +5,7 @@ from pymongo import MongoClient, errors
 
 postgres_dbname = sys.argv[1]
 postgres_user = sys.argv[2]
-fqdn = sys.argv[3]
+fqdn_arg = sys.argv[3]
 
 
 def parse_fqdn(fqdn):
@@ -22,7 +22,8 @@ try:
         'cluster_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'template_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'host_cursor': conn.cursor(cursor_factory=extras.DictCursor),
-        'vm_cursor': conn.cursor(cursor_factory=extras.DictCursor)
+        'vm_cursor': conn.cursor(cursor_factory=extras.DictCursor),
+        'storage_cursor': conn.cursor(cursor_factory=extras.DictCursor)
     }
 
     mongo_client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=10000)
@@ -32,7 +33,7 @@ except (errors.ConnectionFailure, OperationalError) as e:
 
 else:
 
-    setup_id = parse_fqdn(fqdn)
+    setup_id = parse_fqdn(fqdn_arg)
 
     threads = []
 
@@ -46,6 +47,8 @@ else:
     threads.append(host_parser)
     vm_parser = VirtualMachineParser(cursor_dict['vm_cursor'])
     threads.append(vm_parser)
+    storage_parser = StorageParser(cursor_dict['storage_cursor'])
+    threads.append(storage_parser)
 
     for thread in threads:
         thread.start()
@@ -61,6 +64,7 @@ else:
     template_collection = db.template
     host_collection = db.host
     vm_collection = db.vm
+    storage_collection = db.storage
 
     setup_collection.update({'_id': setup_id}, {'_id': setup_id, 'dcs_count': len(dc_parser.datacenters)}, upsert=True)
 
@@ -84,7 +88,11 @@ else:
     for vm in vm_parser.vms:
         vm_collection.update({'_id': vm['_id']}, vm, upsert=True)
 
+    for storage in storage_parser.get_storage:
+        storage_collection.update({'_id': storage['_id']}, storage, upsert=True)
+
     for cursor in cursor_dict.values():
         cursor.close()
+
     conn.close()
     mongo_client.close()
