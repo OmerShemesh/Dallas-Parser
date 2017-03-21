@@ -82,7 +82,7 @@ else:
         template_collection.update({'_id': template['_id']}, template, upsert=True)
 
     for host in host_parser.hosts:
-        host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
+        # host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
         host_collection.update({'_id': host['_id']}, host, upsert=True)
 
     for vm in vm_parser.vms:

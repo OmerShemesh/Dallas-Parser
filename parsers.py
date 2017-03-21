@@ -2,6 +2,14 @@ import threading
 import json
 import os
 
+
+def parse_json_file(filename):
+    with open(os.path.join(os.getcwd(), 'data', filename)) as file:
+        data = json.load(file)
+        return data
+
+
+
 class DataCenterParser(threading.Thread):
     def __init__(self, cursor):
         super().__init__()
@@ -98,7 +106,7 @@ class HostParser(threading.Thread):
                 'mem_size': vds_host['physical_mem_mb'],
                 'cpu_usage': vds_host['usage_cpu_percent'],
                 'mem_usage': vds_host['usage_mem_percent'],
-                'running_vms_count': 0,
+                'running_vms_count': vds_host['vm_active'],
                 'cluster_id': vds_host['cluster_id']
             }
             self.__hosts_list.append(host_dict)
@@ -152,15 +160,19 @@ class VirtualMachineParser(threading.Thread):
         for vm in self.__vms_db_list:
             self.__clusters[vm['cluster_id']] = self.__clusters.get(vm['cluster_id'], 0) + 1
             self.__running_hosts[vm['run_on_vds']] = self.__running_hosts.get(vm['run_on_vds'], 0) + 1
-            vm_dict = {
-                '_id': vm['vm_guid'],
-                'vm_name': vm['vm_name'],
-                'mem_size': vm['mem_size_mb'],
-                'cluster_id': vm['cluster_id'],
-                'running_host': vm['run_on_vds']
-            }
 
-            self.__vms_list.append(vm_dict)
+            os_types = parse_json_file('os_types.json')
+            if str(vm['os']) in os_types:
+                vm_dict = {
+                    '_id': vm['vm_guid'],
+                    'vm_name': vm['vm_name'],
+                    'mem_size': vm['mem_size_mb'],
+                    'cluster_id': vm['cluster_id'],
+                    'running_host': vm['run_on_vds'],
+                    'os_type': os_types[str(vm['os'])]
+                }
+
+                self.__vms_list.append(vm_dict)
 
     def get_cluster_vm_count(self, cluster_id):
         return self.__clusters.get(cluster_id, 0)
@@ -184,7 +196,7 @@ class StorageParser(threading.Thread):
     def run(self):
         self.__cursor.execute("SELECT * FROM storage_domains")
         self.__storage_db_list = self.__cursor.fetchall()
-        storage_types = self._parse_storage_types()
+        storage_types = parse_json_file('storage_types.json')
         for storage in self.__storage_db_list:
             if str(storage['storage_type']) in storage_types:
                 storage_dict = {
@@ -194,10 +206,6 @@ class StorageParser(threading.Thread):
                 }
                 self.__storage_list.append(storage_dict)
 
-    def _parse_storage_types(self):
-        with open(os.path.join(os.getcwd(), 'data/storage_types.json')) as file:
-            data = json.load(file)
-            return data
 
     @property
     def get_storage(self):
