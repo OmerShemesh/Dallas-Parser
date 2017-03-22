@@ -66,7 +66,11 @@ else:
     vm_collection = db.vm
     storage_collection = db.storage
 
-    setup_collection.update({'_id': setup_id}, {'_id': setup_id, 'dcs_count': len(dc_parser.datacenters)}, upsert=True)
+    setup_collection.update({'_id': setup_id},
+                            {'_id': setup_id,
+                             'dcs_count': len(dc_parser.datacenters),
+                             'clusters_count': len(cluster_parser.clusters), 'hosts_count': len(host_parser.hosts)},
+                            upsert=True)
 
     for datacenter in dc_parser.datacenters:
         datacenter['clusters_count'] = cluster_parser.get_datacenter_clusters_count(datacenter['_id'])
