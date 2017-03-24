@@ -29,7 +29,7 @@ try:
     mongo_client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=10000)
 
 except (errors.ConnectionFailure, OperationalError) as e:
-    print(e)
+    raise e
 
 else:
 

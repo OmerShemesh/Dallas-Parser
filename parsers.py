@@ -86,28 +86,27 @@ class HostParser(threading.Thread):
         elif manufacturer.startswith('power'):
             return 'IBM'
 
-
-
     def run(self):
 
         self.__cursor.execute("SELECT * FROM vds")
         self.__vds_db_list = self.__cursor.fetchall()
-        for vds_host in self.__vds_db_list:
-            cpu_manufacturer = self._parse_cpu_manufacturer(vds_host['cpu_model'])
+        for host in self.__vds_db_list:
+            cpu_manufacturer = self._parse_cpu_manufacturer(host['cpu_model'])
 
-            self.__clusters[vds_host['cluster_id']] = self.__clusters.get(vds_host['cluster_id'], 0) + 1
+            self.__clusters[host['cluster_id']] = self.__clusters.get(host['cluster_id'], 0) + 1
 
             host_dict = {
-                '_id': vds_host['vds_id'],
-                'cpu_model': vds_host['cpu_model'],
+                '_id': host['vds_id'],
+                'cpu_model': host['cpu_model'],
                 'cpu_manufacturer': cpu_manufacturer,
-                'host_name': vds_host['vds_name'],
-                'host_ip': vds_host['host_name'],
-                'mem_size': vds_host['physical_mem_mb'],
-                'cpu_usage': vds_host['usage_cpu_percent'],
-                'mem_usage': vds_host['usage_mem_percent'],
-                'running_vms_count': vds_host['vm_active'],
-                'cluster_id': vds_host['cluster_id']
+                'host_name': host['vds_name'],
+                'host_ip': host['host_name'],
+                'mem_size': host['physical_mem_mb'],
+                'cpu_usage': host['usage_cpu_percent'],
+                'mem_usage': host['usage_mem_percent'],
+                'running_vms_count': host['vm_active'],
+                'cluster_id': host['cluster_id'],
+                'cpu_cores': host['cpu_cores']
             }
             self.__hosts_list.append(host_dict)
 
@@ -169,7 +168,7 @@ class VirtualMachineParser(threading.Thread):
                     'mem_size': vm['mem_size_mb'],
                     'cluster_id': vm['cluster_id'],
                     'running_host': vm['run_on_vds'],
-                    'os_type': os_types[str(vm['os'])]
+                    'os_type': os_types[str(vm['os'])],
                 }
 
                 self.__vms_list.append(vm_dict)
