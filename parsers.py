@@ -156,11 +156,12 @@ class VirtualMachineParser(threading.Thread):
         self.__cursor.execute("SELECT * FROM vms")
         self.__vms_db_list = self.__cursor.fetchall()
 
+        os_types = parse_json_file('os_types.json')
+
         for vm in self.__vms_db_list:
             self.__clusters[vm['cluster_id']] = self.__clusters.get(vm['cluster_id'], 0) + 1
             self.__running_hosts[vm['run_on_vds']] = self.__running_hosts.get(vm['run_on_vds'], 0) + 1
 
-            os_types = parse_json_file('os_types.json')
             if str(vm['os']) in os_types:
                 vm_dict = {
                     '_id': vm['vm_guid'],
@@ -169,6 +170,8 @@ class VirtualMachineParser(threading.Thread):
                     'cluster_id': vm['cluster_id'],
                     'running_host': vm['run_on_vds'],
                     'os_type': os_types[str(vm['os'])],
+                    'mem_usage': vm.get('usage_mem_percent', 0),
+                    'cpu_usage': vm.get('usage_cpu_percent', 0)
                 }
 
                 self.__vms_list.append(vm_dict)
