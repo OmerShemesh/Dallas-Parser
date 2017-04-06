@@ -157,6 +157,7 @@ class VirtualMachineParser(threading.Thread):
         self.__vms_db_list = self.__cursor.fetchall()
 
         os_types = parse_json_file('os_types.json')
+        display_types = parse_json_file('vm_display_types.json')
 
         for vm in self.__vms_db_list:
             self.__clusters[vm['cluster_id']] = self.__clusters.get(vm['cluster_id'], 0) + 1
@@ -170,6 +171,7 @@ class VirtualMachineParser(threading.Thread):
                     'cluster_id': vm['cluster_id'],
                     'running_host': vm['run_on_vds'],
                     'os_type': os_types[str(vm['os'])],
+                    'display_type': display_types[str(vm['default_display_type'])],
                     'mem_usage': vm.get('usage_mem_percent', 0),
                     'cpu_usage': vm.get('usage_cpu_percent', 0)
                 }
