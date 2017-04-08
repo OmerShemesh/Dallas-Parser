@@ -203,10 +203,20 @@ class StorageParser(threading.Thread):
         storage_types = parse_json_file('storage_types.json')
         for storage in self.__storage_db_list:
             if str(storage['storage_type']) in storage_types:
+                available_disk = storage['available_disk_size']
+                used_disk = storage['used_disk_size']
+
+                used_disk_percentage = 0
+
+                if available_disk is not None and used_disk is not None:
+                    total_disk = available_disk + used_disk
+                    used_disk_percentage = float("{0:.2f}".format((used_disk * 100) / total_disk))
+
                 storage_dict = {
                     '_id': storage['id'],
                     'storage_type': storage_types[str(storage['storage_type'])],
-                    'datacenter_id': storage['storage_pool_id']
+                    'datacenter_id': storage['storage_pool_id'],
+                    'used_disk': used_disk_percentage
                 }
                 self.__storage_list.append(storage_dict)
 

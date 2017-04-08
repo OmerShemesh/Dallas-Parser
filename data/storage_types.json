@@ -1,6 +1,11 @@
 {
+  "0": "Unknown",
   "1": "NFS",
   "2": "FCP",
   "3": "iSCSI",
-  "4": "Local"
+  "4": "LocalFS",
+  "6": "PosixFS",
+  "7": "GlusterFS",
+  "8": "Glance",
+  "9": "Cinder"
 }
