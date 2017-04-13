@@ -23,7 +23,8 @@ try:
         'template_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'host_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'vm_cursor': conn.cursor(cursor_factory=extras.DictCursor),
-        'storage_cursor': conn.cursor(cursor_factory=extras.DictCursor)
+        'storage_cursor': conn.cursor(cursor_factory=extras.DictCursor),
+        'network_cursor': conn.cursor(cursor_factory=extras.DictCursor)
     }
 
     mongo_client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=10000)
@@ -49,6 +50,8 @@ else:
     threads.append(vm_parser)
     storage_parser = StorageParser(cursor_dict['storage_cursor'])
     threads.append(storage_parser)
+    network_parser = NetworkParser(cursor_dict['network_cursor'])
+    threads.append(network_parser)
 
     for thread in threads:
         thread.start()
@@ -65,15 +68,20 @@ else:
     host_collection = db.host
     vm_collection = db.vm
     storage_collection = db.storage
+    network_collection = db.network
 
     setup_collection.update({'_id': setup_id},
                             {'_id': setup_id,
                              'dcs_count': len(dc_parser.datacenters),
-                             'clusters_count': len(cluster_parser.clusters), 'hosts_count': len(host_parser.hosts)},
+                             'clusters_count': len(cluster_parser.clusters),
+                             'hosts_count': len(host_parser.hosts),
+                             'vms_count': len(vm_parser.vms)},
                             upsert=True)
 
     for datacenter in dc_parser.datacenters:
         datacenter['clusters_count'] = cluster_parser.get_datacenter_clusters_count(datacenter['_id'])
+        datacenter['storage_count'] = storage_parser.get_datacenter_storage_count(datacenter['_id'])
+        datacenter['networks_count'] = network_parser.get_datacenter_networks_count(datacenter['_id'])
         datacenter['setup_id'] = setup_id
         datacenter_collection.update({'_id': datacenter['_id']}, datacenter, upsert=True)
 

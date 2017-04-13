@@ -9,7 +9,6 @@ def parse_json_file(filename):
         return data
 
 
-
 class DataCenterParser(threading.Thread):
     def __init__(self, cursor):
         super().__init__()
@@ -21,7 +20,6 @@ class DataCenterParser(threading.Thread):
         self.__cursor.execute("SELECT * FROM storage_pool")
         self.__datacenters_db_list = self.__cursor.fetchall()
         for datacenter in self.__datacenters_db_list:
-
             datacenter_dict = {
                 '_id': datacenter['id'],
                 'datacenter_name': datacenter['name'],
@@ -64,7 +62,7 @@ class ClusterParser(threading.Thread):
     def clusters(self):
         return self.__clusters_list
 
-    def get_datacenter_clusters_count(self,datacenter_id):
+    def get_datacenter_clusters_count(self, datacenter_id):
         return self.__datacenters.get(datacenter_id, 0)
 
 
@@ -190,12 +188,12 @@ class VirtualMachineParser(threading.Thread):
 
 
 class StorageParser(threading.Thread):
-
     def __init__(self, cursor):
         super().__init__()
         self.__storage_list = []
         self.__storage_db_list = []
         self.__cursor = cursor
+        self.__datacenters = {}
 
     def run(self):
         self.__cursor.execute("SELECT * FROM storage_domains")
@@ -203,6 +201,8 @@ class StorageParser(threading.Thread):
         storage_types = parse_json_file('storage_types.json')
         for storage in self.__storage_db_list:
             if str(storage['storage_type']) in storage_types:
+                self.__datacenters[storage['storage_pool_id']] = \
+                    self.__datacenters.get(storage['storage_pool_id'], 0) + 1
                 available_disk = storage['available_disk_size']
                 used_disk = storage['used_disk_size']
 
@@ -220,14 +220,34 @@ class StorageParser(threading.Thread):
                 }
                 self.__storage_list.append(storage_dict)
 
-
     @property
     def get_storage(self):
         return self.__storage_list
 
+    def get_datacenter_storage_count(self, datacenter_id):
+        return self.__datacenters.get(datacenter_id, 0)
 
 
+class NetworkParser(threading.Thread):
+    def __init__(self, cursor):
+        super().__init__()
+        self.__networks_list = []
+        self.__networks_db_list = []
+        self.__cursor = cursor
+        self.__datacenters = {}
 
+    def run(self):
+        self.__cursor.execute("SELECT * FROM network_view")
+        self.__networks_db_list = self.__cursor.fetchall()
 
+        for network in self.__networks_db_list:
+            self.__datacenters[network['storage_pool_id']] = self.__datacenters.get(network['storage_pool_id'], 0) + 1
+            network_dict = {
+                '_id': network['id'],
+                'name': network['name'],
+            }
 
+            self.__networks_list.append(network_dict)
 
+    def get_datacenter_networks_count(self, datacenter_id):
+        return self.__datacenters.get(datacenter_id, 0)
