@@ -84,6 +84,10 @@ class HostParser(threading.Thread):
         elif manufacturer.startswith('power'):
             return 'IBM'
 
+    def _parse_host_os(self, os):
+        split = os.split('-')
+        return '{} {}'.format(split[0].strip(), split[1].strip())
+
     def run(self):
 
         self.__cursor.execute("SELECT * FROM vds")
@@ -104,7 +108,8 @@ class HostParser(threading.Thread):
                 'mem_usage': host['usage_mem_percent'],
                 'running_vms_count': host['vm_active'],
                 'cluster_id': host['cluster_id'],
-                'cpu_cores': host['cpu_cores']
+                'cpu_cores': host['cpu_cores'],
+                'os': self._parse_host_os(host['host_os'])
             }
             self.__hosts_list.append(host_dict)
 
@@ -154,7 +159,7 @@ class VirtualMachineParser(threading.Thread):
         self.__cursor.execute("SELECT * FROM vms")
         self.__vms_db_list = self.__cursor.fetchall()
 
-        os_types = parse_json_file('os_types.json')
+        os_types = parse_json_file('vm_os_types.json')
         display_types = parse_json_file('vm_display_types.json')
 
         for vm in self.__vms_db_list:
