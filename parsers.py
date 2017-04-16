@@ -175,8 +175,9 @@ class VirtualMachineParser(threading.Thread):
                     'running_host': vm['run_on_vds'],
                     'os_type': os_types[str(vm['os'])],
                     'display_type': display_types[str(vm['default_display_type'])],
+                    'num_of_cpus': vm['num_of_cpus'],
                     'mem_usage': vm.get('usage_mem_percent', 0),
-                    'cpu_usage': vm.get('usage_cpu_percent', 0)
+                    'cpu_usage': vm.get('usage_cpu_percent', 0),
                 }
 
                 self.__vms_list.append(vm_dict)
