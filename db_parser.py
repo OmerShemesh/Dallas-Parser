@@ -24,7 +24,8 @@ try:
         'host_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'vm_cursor': conn.cursor(cursor_factory=extras.DictCursor),
         'storage_cursor': conn.cursor(cursor_factory=extras.DictCursor),
-        'network_cursor': conn.cursor(cursor_factory=extras.DictCursor)
+        'network_cursor': conn.cursor(cursor_factory=extras.DictCursor),
+        'interface_cursor': conn.cursor(cursor_factory=extras.DictCursor),
     }
 
     mongo_client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=10000)
@@ -52,6 +53,8 @@ else:
     threads.append(storage_parser)
     network_parser = NetworkParser(cursor_dict['network_cursor'])
     threads.append(network_parser)
+    interface_parser = NetworkInterfaceParser(cursor_dict['interface_cursor'])
+    threads.append(interface_parser)
 
     for thread in threads:
         thread.start()
@@ -69,6 +72,7 @@ else:
     vm_collection = db.vm
     storage_collection = db.storage
     network_collection = db.network
+    network_interface_collection = db.network_interface
 
     setup_collection.update({'_id': setup_id},
                             {'_id': setup_id,
@@ -95,13 +99,21 @@ else:
 
     for host in host_parser.hosts:
         # host['running_vms_count'] = vm_parser.get_host_running_vm_count(host['_id'])
+        host['nics_count'] = interface_parser.get_host_interfaces_count(host['_id'])
         host_collection.update({'_id': host['_id']}, host, upsert=True)
 
     for vm in vm_parser.vms:
+        vm['nics_count'] = interface_parser.get_vm_interfaces_count(vm['_id'])
         vm_collection.update({'_id': vm['_id']}, vm, upsert=True)
 
     for storage in storage_parser.get_storage:
         storage_collection.update({'_id': storage['_id']}, storage, upsert=True)
+
+    for network in network_parser.networks:
+        network_collection.update({'_id': network['_id']}, network, upsert=True)
+
+    for interface in interface_parser.interfaces:
+        network_interface_collection.update({'_id': interface['_id']}, interface, upsert=True)
 
     for cursor in cursor_dict.values():
         cursor.close()

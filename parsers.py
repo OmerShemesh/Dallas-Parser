@@ -255,5 +255,54 @@ class NetworkParser(threading.Thread):
 
             self.__networks_list.append(network_dict)
 
+    @property
+    def networks(self):
+        return self.__networks_list
+
     def get_datacenter_networks_count(self, datacenter_id):
         return self.__datacenters.get(datacenter_id, 0)
+
+
+class NetworkInterfaceParser(threading.Thread):
+    def __init__(self, cursor):
+        super().__init__()
+        self.__cursor = cursor
+        self.__vm_interfaces_db_list = []
+        self.__host_interfaces_db_list = []
+        self.__interfaces_list = []
+        self.__hosts = {}
+        self.__vms = {}
+
+    def run(self):
+        self.__cursor.execute("SELECT * FROM vds_interface_view")
+        self.__host_interfaces_db_list = self.__cursor.fetchall()
+        self.__cursor.execute("SELECT * FROM vm_interface_view")
+        self.__vm_interfaces_db_list = self.__cursor.fetchall()
+
+        for host_interface in self.__host_interfaces_db_list:
+            self.__hosts[host_interface['vds_id']] = self.__hosts.get(host_interface['vds_id'], 0) + 1
+            interface_dict = {
+                '_id': host_interface['id'],
+                'name': host_interface['name'],
+                'is_host_interface': bool(host_interface['is_vds'])
+            }
+            self.__interfaces_list.append(interface_dict)
+
+        for vm_interface in self.__vm_interfaces_db_list:
+            self.__vms[vm_interface['vm_guid']] = self.__vms.get(vm_interface['vm_guid'], 0) + 1
+            interface_dict = {
+                '_id': host_interface['id'],
+                'name': host_interface['name'],
+                'is_host_interface': bool(host_interface['is_vds'])
+            }
+            self.__interfaces_list.append(interface_dict)
+
+    @property
+    def interfaces(self):
+        return self.__interfaces_list
+
+    def get_host_interfaces_count(self, host_id):
+        return self.__hosts.get(host_id, 0)
+
+    def get_vm_interfaces_count(self, vm_id):
+        return self.__vms.get(vm_id, 0)
