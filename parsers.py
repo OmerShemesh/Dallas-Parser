@@ -159,6 +159,7 @@ class VirtualMachineParser(threading.Thread):
         self.__cursor.execute("SELECT * FROM vms")
         self.__vms_db_list = self.__cursor.fetchall()
 
+
         os_types = parse_json_file('vm_os_types.json')
         display_types = parse_json_file('vm_display_types.json')
 
@@ -305,4 +306,21 @@ class NetworkInterfaceParser(threading.Thread):
         return self.__hosts.get(host_id, 0)
 
     def get_vm_interfaces_count(self, vm_id):
+        return self.__vms.get(vm_id, 0)
+
+
+class DiskParser(threading.Thread):
+    def __init__(self, cursor):
+        super().__init__()
+        self.__disks_db_list = []
+        self.__cursor = cursor
+        self.__vms = {}
+
+    def run(self):
+        self.__cursor.execute("SELECT * FROM all_disks_for_vms")
+        self.__disks_db_list = self.__cursor.fetchall()
+        for disk in self.__disks_db_list:
+            self.__vms[disk['vm_id']] = self.__vms.get(disk['vm_id'], 0) + 1
+
+    def get_vm_disks_count(self, vm_id):
         return self.__vms.get(vm_id, 0)
