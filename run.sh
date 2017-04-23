@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-if [ -z "$1" ]; then
+if ! [ -x "$(command -v dropdb)" ]; then
+    echo "Please ensure Postgresql is installed (dropdb command not found)"
+    exit 1
+elif [ -z "$1" ]; then
     echo "Please provide a path for the PostgreSQL dump file!"
     exit 1
-
 elif [ -z "$2" ]; then
     echo "Please provide the engine's FQDN!"
     exit 1
