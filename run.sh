@@ -11,10 +11,13 @@ elif [ -z "$2" ]; then
 else
     DUMP_PATH="$1"
     FQDN="$2"
-    dropdb -h localhost -U omer $FQDN
+    if psql -lqt | cut -d \| -f 1 | grep -qw $FQDN; then
+    	dropdb -h localhost -U omer $FQDN
+    fi
     createdb -h localhost -U omer $FQDN
     pg_restore --host localhost --username omer --dbname $FQDN --verbose "$DUMP_PATH"
-
     python3 db_parser.py $FQDN omer $FQDN
+
+
 fi
 

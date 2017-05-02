@@ -5,14 +5,7 @@ from pymongo import MongoClient, errors
 
 postgres_dbname = sys.argv[1]
 postgres_user = sys.argv[2]
-fqdn_arg = sys.argv[3]
-
-
-def parse_fqdn(fqdn):
-    split = fqdn.split('-')[1].split('.')
-    join = '.'.join(split[1:])
-
-    return join
+setup_id = sys.argv[3]
 
 
 try:
@@ -35,8 +28,6 @@ except (errors.ConnectionFailure, OperationalError) as e:
     raise e
 
 else:
-
-    setup_id = parse_fqdn(fqdn_arg)
 
     threads = []
 
